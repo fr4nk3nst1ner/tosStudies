@@ -1,44 +1,42 @@
-# Screen 2: Finds strong RS stocks near highs with controlled volatility
+# Tight Scan (Simplified to avoid timeout)
 
-# Current price and volume
+# Core conditions
+def dollarVolumeTight = close * volume;
 def price = close;
-def volume = volume;
 
-# Dollar volume: filter for minimum $25M/day
-def dollarVol = price * volume;
+# Simplified 12-Month RS Rating (using fewer lookback periods)
+def stock1mTight = if price[21] > 0 then ((price / price[21]) - 1) * 100 else 0;
+def stock3mTight = if price[63] > 0 then ((price / price[63]) - 1) * 100 else 0;
+def stock6mTight = if price[126] > 0 then ((price / price[126]) - 1) * 100 else 0;
 
-# Relative strength over different timeframes
-def perf12 = price / price[252] - 1;  # 1-year RS
-def perf6 = price / price[126] - 1;  # 6-month RS
-def perf3 = price / price[63] - 1;   # 3-month RS
+# Simplified momentum score (just key timeframes)
+def momentumTight = (stock1mTight * 0.4) + (stock3mTight * 0.35) + (stock6mTight * 0.25);
 
-# Trend strength: price above 50MA and ≥5% above 200MA
-def above50dma = price >= Average(price, 50);
-def above200dmaPct = (price - Average(price, 200)) / Average(price, 200);
+# Simplified RS rating
+def rsTightRating = 
+    if momentumTight >= 80 then 90
+    else if momentumTight >= 60 then 80
+    else if momentumTight >= 40 then 70
+    else if momentumTight >= 25 then 60
+    else if momentumTight >= 10 then 50
+    else 25;
 
-# Volatility: 21-day ATR must be 1%–4% of price
-def atr = Average(TrueRange(high, close, low), 21);
-def atrPct = atr / price;
+# Moving averages and other conditions
+def ma200Tight = Average(close, 200);
+def ma50Tight = Average(close, 50);
+def priceVs200 = (close - ma200Tight) / ma200Tight;
+def atrTight = Average(TrueRange(high, close, low), 21);
+def atrPercent = atrTight / close;
+def high52Tight = Highest(close, 252);
+def percentOffHigh = close / high52Tight;
 
-# % Off high: within 15% of 52-week high
-def high52 = Highest(price, 252);
-def nearHigh = price / high52;
-
-# Final screen:
-# - Price ≥ $10
-# - Dollar volume ≥ $25M
-# - RS for 12m, 6m, 3m ≥ 70%
-# - Price ≥ 50MA
-# - ≥5% above 200MA
-# - ATR is 1–4% of price
-# - ≤15% below 52-week high
-plot scan = 
-    price >= 10 and
-    dollarVol >= 25000000 and
-    perf12 >= 0.70 and
-    perf6 >= 0.70 and
-    perf3 >= 0.70 and
-    above50dma and
-    above200dmaPct >= 0.05 and
-    atrPct >= 0.01 and atrPct <= 0.04 and
-    nearHigh >= 0.85;
+# TIGHT SCAN: Simplified but effective
+plot scan = dollarVolumeTight >= 25000000 and 
+           price >= 10 and 
+           rsTightRating >= 70 and
+           stock3mTight >= 70 and
+           priceVs200 >= 0.05 and
+           close >= ma50Tight and
+           atrPercent >= 0.01 and 
+           atrPercent <= 0.05 and
+           percentOffHigh >= 0.85;
