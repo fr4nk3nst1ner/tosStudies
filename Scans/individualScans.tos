@@ -1,0 +1,156 @@
+# Basic Scan
+
+# 1. 
+
+close * volume >= 25000000
+
+# 2. 
+
+close >= 10
+
+# 3. 
+
+# IBD-Style 12-Month RS Rating calculation
+def stock1m = if close[21] > 0 then ((close / close[21]) - 1) * 100 else 0;
+def stock3m = if close[63] > 0 then ((close / close[63]) - 1) * 100 else 0;
+def stock6m = if close[126] > 0 then ((close / close[126]) - 1) * 100 else 0;
+def stock12m = if close[252] > 0 then ((close / close[252]) - 1) * 100 else 0;
+
+# Volume confirmation
+def avgVolume20 = Average(volume, 20);
+def volumeRatio = if avgVolume20 > 0 then volume / avgVolume20 else 1;
+
+# 12-Month composite momentum score
+def momentum12M = (stock1m * 0.3) + (stock3m * 0.25) + (stock6m * 0.25) + (stock12m * 0.2);
+def volumeAdjusted12M = momentum12M * (1 + Min(volumeRatio - 1, 1) * 0.1);
+
+# Convert to IBD-style 1-99 rating
+def rs12Rating = 
+    if volumeAdjusted12M >= 100 then 99
+    else if volumeAdjusted12M >= 75 then 95
+    else if volumeAdjusted12M >= 50 then 90
+    else if volumeAdjusted12M >= 40 then 85
+    else if volumeAdjusted12M >= 30 then 80
+    else if volumeAdjusted12M >= 25 then 75
+    else if volumeAdjusted12M >= 20 then 70
+    else if volumeAdjusted12M >= 15 then 65
+    else if volumeAdjusted12M >= 10 then 60
+    else if volumeAdjusted12M >= 5 then 55
+    else if volumeAdjusted12M >= 0 then 50
+    else 25;
+
+# Scan logic: RS rating ≥ 60 AND raw 3-month performance ≥ 60%
+plot scan = rs12Rating >= 60 and stock3m >= 60;
+
+# 4. 
+
+close >= Average(close, 50) and close >= Average(close, 200)
+
+# Tight Scan
+
+# 1. 
+
+close * volume >= 25000000
+
+# 2. 
+
+close >= 10
+
+# 3. 
+
+def price = close;
+
+# IBD-Style 12-Month RS Rating calculation
+def stock1m = if price[21] > 0 then ((price / price[21]) - 1) * 100 else 0;
+def stock3m = if price[63] > 0 then ((price / price[63]) - 1) * 100 else 0;
+def stock6m = if price[126] > 0 then ((price / price[126]) - 1) * 100 else 0;
+def stock12m = if price[252] > 0 then ((price / price[252]) - 1) * 100 else 0;
+
+# Volume confirmation
+def avgVolume20 = Average(volume, 20);
+def volumeRatio = if avgVolume20 > 0 then volume / avgVolume20 else 1;
+
+# 12-Month composite momentum score
+def momentum12M = (stock1m * 0.3) + (stock3m * 0.25) + (stock6m * 0.25) + (stock12m * 0.2);
+def volumeAdjusted12M = momentum12M * (1 + Min(volumeRatio - 1, 1) * 0.1);
+
+def rs12Rating = 
+    if volumeAdjusted12M >= 100 then 99
+    else if volumeAdjusted12M >= 75 then 95
+    else if volumeAdjusted12M >= 50 then 90
+    else if volumeAdjusted12M >= 40 then 85
+    else if volumeAdjusted12M >= 30 then 80
+    else if volumeAdjusted12M >= 25 then 75
+    else if volumeAdjusted12M >= 20 then 70
+    else if volumeAdjusted12M >= 15 then 65
+    else if volumeAdjusted12M >= 10 then 60
+    else if volumeAdjusted12M >= 5 then 55
+    else if volumeAdjusted12M >= 0 then 50
+    else 25;
+
+# IBD-Style 6-Month RS Rating calculation
+def stock2m = if price[42] > 0 then ((price / price[42]) - 1) * 100 else 0;
+def stock4m = if price[84] > 0 then ((price / price[84]) - 1) * 100 else 0;
+def stock5m = if price[105] > 0 then ((price / price[105]) - 1) * 100 else 0;
+
+def momentum6M = (stock1m * 0.10) + (stock2m * 0.15) + (stock3m * 0.25) + (stock4m * 0.25) + (stock5m * 0.15) + (stock6m * 0.10);
+def volumeAdjusted6M = momentum6M * (1 + Min(volumeRatio - 1, 1) * 0.12);
+
+def rs6Rating = 
+    if volumeAdjusted6M >= 80 then 99
+    else if volumeAdjusted6M >= 60 then 95
+    else if volumeAdjusted6M >= 45 then 90
+    else if volumeAdjusted6M >= 35 then 85
+    else if volumeAdjusted6M >= 28 then 80
+    else if volumeAdjusted6M >= 22 then 75
+    else if volumeAdjusted6M >= 18 then 70
+    else if volumeAdjusted6M >= 14 then 65
+    else if volumeAdjusted6M >= 10 then 60
+    else if volumeAdjusted6M >= 6 then 55
+    else if volumeAdjusted6M >= 0 then 50
+    else 25;
+
+# IBD-Style 3-Month RS Rating calculation
+def stock1w = if price[5] > 0 then ((price / price[5]) - 1) * 100 else 0;
+def stock2w = if price[10] > 0 then ((price / price[10]) - 1) * 100 else 0;
+
+def avgVolume10 = Average(volume, 10);
+def volumeRatio3M = if avgVolume10 > 0 then volume / avgVolume10 else 1;
+
+def momentum3M = (stock1w * 0.35) + (stock2w * 0.25) + (stock1m * 0.20) + (stock2m * 0.15) + (stock3m * 0.05);
+def volumeAdjusted3M = momentum3M * (1 + Min(volumeRatio3M - 1, 1.5) * 0.15);
+
+def rs3Rating = 
+    if volumeAdjusted3M >= 50 then 99
+    else if volumeAdjusted3M >= 35 then 95
+    else if volumeAdjusted3M >= 25 then 90
+    else if volumeAdjusted3M >= 20 then 85
+    else if volumeAdjusted3M >= 15 then 80
+    else if volumeAdjusted3M >= 12 then 75
+    else if volumeAdjusted3M >= 10 then 70
+    else if volumeAdjusted3M >= 8 then 65
+    else if volumeAdjusted3M >= 5 then 60
+    else if volumeAdjusted3M >= 3 then 55
+    else if volumeAdjusted3M >= 0 then 50
+    else 25;
+
+plot scan = rs12Rating >= 70 and rs6Rating >= 70 and rs3Rating >= 70;
+
+# 4. 
+
+(close - Average(close, 200)) / Average(close, 200) >= 0.05
+
+# 5. 
+
+close >= Average(close, 50)
+
+# 6. 
+
+def atr = Average(TrueRange(high, close, low), 21);
+plot scan = (atr / close) >= 0.01 and (atr / close) <= 0.05;
+
+# 7. 
+
+def high52 = Highest(close, 252);
+plot scan = (close / high52) >= 0.85;
+

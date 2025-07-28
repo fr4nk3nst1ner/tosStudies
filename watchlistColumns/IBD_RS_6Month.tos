@@ -1,0 +1,63 @@
+# IBD-Style 6-Month Relative Strength Rating (1-99 scale)
+# Focused on medium-term momentum characteristics
+
+# Current price
+def stockPrice = close;
+
+# Performance calculations with null checks - focus on medium timeframes
+def stock1m = if stockPrice[21] > 0 then ((stockPrice / stockPrice[21]) - 1) * 100 else 0;
+def stock2m = if stockPrice[42] > 0 then ((stockPrice / stockPrice[42]) - 1) * 100 else 0;
+def stock3m = if stockPrice[63] > 0 then ((stockPrice / stockPrice[63]) - 1) * 100 else 0;
+def stock4m = if stockPrice[84] > 0 then ((stockPrice / stockPrice[84]) - 1) * 100 else 0;
+def stock5m = if stockPrice[105] > 0 then ((stockPrice / stockPrice[105]) - 1) * 100 else 0;
+def stock6m = if stockPrice[126] > 0 then ((stockPrice / stockPrice[126]) - 1) * 100 else 0;
+
+# Medium-term momentum indicators
+def priceChange30 = if stockPrice[30] > 0 then ((stockPrice / stockPrice[30]) - 1) * 100 else 0;
+def priceChange60 = if stockPrice[60] > 0 then ((stockPrice / stockPrice[60]) - 1) * 100 else 0;
+
+# Volume-weighted momentum (if available)
+def avgVolume20 = Average(volume, 20);
+def currentVolume = volume;
+def volumeRatio = if avgVolume20 > 0 then currentVolume / avgVolume20 else 1;
+
+# Weighted composite momentum score - favor medium-term performance
+def momentumScore = (stock1m * 0.10) + (stock2m * 0.15) + (stock3m * 0.25) + (stock4m * 0.25) + (stock5m * 0.15) + (stock6m * 0.10);
+
+# Add volume factor for stronger signals
+def volumeAdjustedScore = momentumScore * (1 + Min(volumeRatio - 1, 1) * 0.12);
+
+# Convert to IBD-style 1-99 rating scale - adjusted for 6-month focus
+def rsRating = 
+    if volumeAdjustedScore >= 80 then 99
+    else if volumeAdjustedScore >= 60 then 95
+    else if volumeAdjustedScore >= 45 then 90
+    else if volumeAdjustedScore >= 35 then 85
+    else if volumeAdjustedScore >= 28 then 80
+    else if volumeAdjustedScore >= 22 then 75
+    else if volumeAdjustedScore >= 18 then 70
+    else if volumeAdjustedScore >= 14 then 65
+    else if volumeAdjustedScore >= 10 then 60
+    else if volumeAdjustedScore >= 6 then 55
+    else if volumeAdjustedScore >= 0 then 50
+    else if volumeAdjustedScore >= -6 then 45
+    else if volumeAdjustedScore >= -10 then 40
+    else if volumeAdjustedScore >= -14 then 35
+    else if volumeAdjustedScore >= -18 then 30
+    else if volumeAdjustedScore >= -22 then 25
+    else if volumeAdjustedScore >= -28 then 20
+    else if volumeAdjustedScore >= -35 then 15
+    else if volumeAdjustedScore >= -45 then 10
+    else 5;
+
+# Display the 6-Month RS Rating
+plot RS_6M = if IsNaN(rsRating) then 0 else rsRating;
+
+# Color coding similar to IBD
+RS_6M.AssignValueColor(
+    if RS_6M >= 80 then Color.DARK_GREEN
+    else if RS_6M >= 70 then Color.GREEN  
+    else if RS_6M >= 50 then Color.YELLOW
+    else if RS_6M >= 30 then Color.ORANGE
+    else Color.RED
+); 
