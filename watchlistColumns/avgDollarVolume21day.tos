@@ -1,0 +1,36 @@
+# Average Dollar Volume over 21 Days
+# Calculates the average dollar volume (price * volume) over the last 21 trading days
+# Displays result in millions for better readability
+
+input length = 21;
+
+# Calculate daily dollar volume (price * volume)
+def dailyDollarVolume = close * volume;
+
+# Calculate 21-day average dollar volume
+def avgDollarVol = Average(dailyDollarVolume, length);
+
+# Auto-adjust display between millions and billions
+def avgDollarVolMM = avgDollarVol / 1000000;
+def avgDollarVolBB = avgDollarVol / 1000000000;
+
+# Determine if we should display in billions or millions
+def useBillions = avgDollarVolMM >= 1000;
+def displayValue = if useBillions then avgDollarVolBB else avgDollarVolMM;
+
+# Plot the data rounded to 1 decimal place
+plot Data = Round(displayValue, 1);
+
+# Color coding - only red for under 25M
+Data.AssignValueColor(
+    if avgDollarVolMM >= 2000 then Color.DARK_GREEN     # Very high volume (2B+)
+    else if avgDollarVolMM >= 1000 then Color.GREEN     # High volume (1-2B)
+    else if avgDollarVolMM >= 500 then Color.LIME       # Above average volume (500M-1B)
+    else if avgDollarVolMM >= 100 then Color.YELLOW     # Moderate volume (100-500M)
+    else if avgDollarVolMM >= 25 then Color.ORANGE      # Low volume (25-100M)
+    else Color.RED                                       # Very low volume (<25M)
+);
+
+# Add labels with M or B suffix using conditional statements
+AddLabel(useBillions, Round(avgDollarVolBB, 1) + "B", Color.WHITE);
+AddLabel(!useBillions, Round(avgDollarVolMM, 1) + "M", Color.WHITE); 

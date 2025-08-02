@@ -1,0 +1,63 @@
+//@version=5
+indicator("Adaptive RS vs SPX with Full Alerts", overlay=false)
+
+// Aggregation recognition
+isWeekly = timeframe.period == "W"
+isMonthly = timeframe.period == "M"
+isDaily = not isWeekly and not isMonthly
+
+// Adaptive lengths
+length1 = isMonthly ? 12 : isWeekly ? 8 : 21
+length2 = isMonthly ? 24 : isWeekly ? 21 : 50
+
+// Relative Strength Line
+price = close
+spxClose = request.security("SPX", timeframe.period, close)
+rsLine = price / spxClose
+
+// Moving Averages
+smaRS1 = ta.sma(rsLine, length1)
+smaRS2 = ta.sma(rsLine, length2)
+
+// === Plotting ===
+plot(rsLine, title="RS", color=color.green, linewidth=2)
+plot(smaRS1, title="SMA1 (Fast)", color=color.orange, linewidth=2)
+plot(smaRS2, title="SMA2 (Slow)", color=color.blue, linewidth=2)
+
+//
+// === Alert Conditions ===
+//
+
+// Tolerant touch detection threshold
+touchThresh = 0.0005
+
+// --- FAST MA --- "Quick"
+quick_touch = math.abs(rsLine - smaRS1) <= touchThresh
+quick_cross_up = ta.crossover(rsLine, smaRS1)
+quick_cross_down = ta.crossunder(rsLine, smaRS1)
+
+// --- SLOW MA --- "Grateful Dead"
+dead_touch = math.abs(rsLine - smaRS2) <= touchThresh
+dead_cross_up = ta.crossover(rsLine, smaRS2)
+dead_cross_down = ta.crossunder(rsLine, smaRS2)
+
+// --- Aggregate all
+any_event = quick_touch or quick_cross_up or quick_cross_down or dead_touch or dead_cross_up or dead_cross_down
+
+//
+// === Alerts ===
+//
+
+// FAST MA (Quick)
+alertcondition(quick_touch, title="Quick (Touch Fast MA)", message="RS is touching the fast MA (quick)")
+alertcondition(quick_cross_up, title="Quick Cross Up", message="RS crossed ABOVE the fast MA (quick cross up)")
+alertcondition(quick_cross_down, title="Quick Cross Down", message="RS crossed BELOW the fast MA (quick cross down)")
+
+// SLOW MA (Grateful Dead)
+alertcondition(dead_touch, title="Grateful Dead (Touch Slow MA)", message="RS is touching the slow MA (grateful dead)")
+alertcondition(dead_cross_up, title="Grateful Dead Cross Up", message="RS crossed ABOVE the slow MA (grateful dead cross up)")
+alertcondition(dead_cross_down, title="Grateful Dead Cross Down", message="RS crossed BELOW the slow MA (grateful dead cross down)")
+
+// Unified Alert
+alertcondition(any_event, title="Any RS Event", message="RS event occurred: Touch or Cross on Fast or Slow MA")
+
